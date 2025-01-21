@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 from sentence_transformers import SentenceTransformer, util
 import torch
 from urllib.parse import urljoin
+from huggingface_hub import hf_hub_download
 
 # Load SentenceTransformer model
 model = SentenceTransformer('all-MiniLM-L6-v2')
@@ -77,25 +78,25 @@ def fetch_relevant_information(query, cdp):
     base_url = docs_links.get(cdp)
     if not base_url:
         return [f"No documentation available for {cdp}."]
-    
+
     # Step 1: Scrape links from the main documentation page
     links = scrape_links(base_url)
     if not links:
         return [f"No links found in {cdp}'s documentation."]
-    
+
     # Step 2: Identify the most relevant link
     relevant_link = find_relevant_link(query, links)
     if not relevant_link:
         return [f"No relevant section found in {cdp}'s documentation."]
-    
+
     section_name, section_url = relevant_link
     st.info(f"Exploring section: {section_name} ({section_url})")
-    
+
     # Step 3: Scrape full content from the relevant link
     content = scrape_content(section_url)
     if not content:
         return [f"No content found in the section {section_name}."]
-    
+
     # Step 4: Filter and format content appropriately
     query_embedding = model.encode(query, convert_to_tensor=True)
     content_embeddings = model.encode(content, convert_to_tensor=True)
