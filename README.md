@@ -2,11 +2,11 @@
 An online assignment for campus recruitment process.
 # CDP ChatBot: Your Query Assistant
 
-Welcome to the **CDP Co-Pilot** project! This web application fetches detailed answers from Segment, mParticle, Lytics, and Zeotap documentation to assist with Customer Data Platforms (CDP) queries.
+Welcome to the **CDP ChatBot** project! This web application fetches detailed answers from Segment, mParticle, Lytics, and Zeotap documentation to assist with Customer Data Platforms (CDP) queries.
 
 ## Overview
 
-CDP Co-Pilot is designed to be a helpful assistant that answers queries related to CDP documentation. It uses natural language processing techniques to understand and fetch the most relevant information from multiple sources. The application is built with efficiency in mind, ensuring quick and accurate responses to user queries.
+CDP ChatBot is designed to be a helpful assistant that answers queries related to CDP documentation. It uses natural language processing techniques to understand and fetch the most relevant information from multiple sources. The application is built with efficiency in mind, ensuring quick and accurate responses to user queries.
 
 ## Features
 
@@ -57,5 +57,5 @@ The tech stack for this project includes:
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/your-username/cdp-co-pilot.git
-   cd cdp-co-pilot
+   git clone https://github.com/your-username/cdp-ChatBot.git
+   cd cdp-ChatBot
