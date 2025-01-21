@@ -1,5 +1,6 @@
-streamlit==1.26.0
-requests==2.31.0
-beautifulsoup4==4.12.2
-sentence-transformers==2.2.2
-torch>=1.9.0,<2.1.0
+streamlit==x.y.z
+requests==x.y.z
+beautifulsoup4==x.y.z
+sentence-transformers==x.y.z
+torch==x.y.z
+huggingface_hub==x.y.z
