@@ -1,5 +1,5 @@
-streamlit
-beautifulsoup4
-requests
-nltk
-scikit-learn
+streamlit==1.26.0
+requests==2.31.0
+beautifulsoup4==4.12.2
+sentence-transformers==2.2.2
+torch==2.0.1
