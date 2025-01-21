@@ -1,6 +1,6 @@
 # zeotap2
 An online assignment for campus recruitment process.
-# CDP Co-Pilot: Your Query Assistant
+# CDP ChatBot: Your Query Assistant
 
 Welcome to the **CDP Co-Pilot** project! This web application fetches detailed answers from Segment, mParticle, Lytics, and Zeotap documentation to assist with Customer Data Platforms (CDP) queries.
 
