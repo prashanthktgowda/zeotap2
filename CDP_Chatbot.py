@@ -21,29 +21,37 @@ docs_links = {
 def preprocess_text(text):
     return ' '.join(text.lower().strip().split())
 
-# Scrape all links from a documentation page
-def scrape_links(base_url, query):
+# Scrape all links and text from a documentation page
+def scrape_links_and_text(base_url, query):
     try:
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
         }
-        response = requests.get(base_url, headers=headers, timeout=10)
+        response = requests.get(base_url, headers=headers, timeout=30)  # Increased timeout
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'html.parser')
 
-        # Extract and filter links based on query similarity
+        # Extract all text and links from the body
         links = {}
         query_embedding = model.encode(query, convert_to_tensor=True)
-        for a in soup.find_all('a', href=True):
-            link_text = preprocess_text(a.get_text())
-            if len(link_text) > 3:  # Avoid empty or short links
-                text_embedding = model.encode(link_text, convert_to_tensor=True)
-                score = util.pytorch_cos_sim(query_embedding, text_embedding).item()
-                if score > 0.5:  # Adjust the threshold for relevance
-                    links[link_text] = urljoin(base_url, a['href'])
+        for element in soup.find_all(['a', 'p', 'h1', 'h2', 'h3', 'li']):
+            if element.name == 'a' and element.has_attr('href'):
+                link_text = preprocess_text(element.get_text())
+                if len(link_text) > 3:  # Avoid empty or short links
+                    text_embedding = model.encode(link_text, convert_to_tensor=True)
+                    score = util.pytorch_cos_sim(query_embedding, text_embedding).item()
+                    if score > 0.5:  # Adjust the threshold for relevance
+                        links[link_text] = urljoin(base_url, element['href'])
+            else:
+                link_text = preprocess_text(element.get_text())
+                if len(link_text) > 3:  # Avoid empty or short text
+                    text_embedding = model.encode(link_text, convert_to_tensor=True)
+                    score = util.pytorch_cos_sim(query_embedding, text_embedding).item()
+                    if score > 0.5:  # Adjust the threshold for relevance
+                        links[link_text] = base_url  # Use the base URL for non-link tags
         return links
-    except Exception as e:
-        st.error(f"Error scraping links from {base_url}: {e}")
+    except requests.exceptions.RequestException as e:
+        st.error(f"Error scraping links and text from {base_url}: {e}")
         return {}
 
 # Scrape content from a specific URL
@@ -52,7 +60,7 @@ def scrape_content(url, query):
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
         }
-        response = requests.get(url, headers=headers, timeout=10)
+        response = requests.get(url, headers=headers, timeout=30)  # Increased timeout
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'html.parser')
 
@@ -64,6 +72,10 @@ def scrape_content(url, query):
                 if text and len(text.split()) > 5:  # Filter out short or irrelevant text
                     content.append(text)
 
+        # If no content is found, return an empty list
+        if not content:
+            return []
+
         # Match the content to the query
         query_embedding = model.encode(query, convert_to_tensor=True)
         content_embeddings = model.encode(content, convert_to_tensor=True)
@@ -73,27 +85,27 @@ def scrape_content(url, query):
 
         # Remove duplicate points and sequence results
         return sorted(set(relevant_content), key=relevant_content.index)
-    except Exception as e:
+    except requests.exceptions.RequestException as e:
         st.warning(f"Error scraping content from {url}: {e}")
         return []
 
-# Format answers with detailed information
+# Format answers in a standardized bullet-point format
 def format_answer(content):
     if not content:
         return "- No relevant content found for your query."
 
     steps = []
     for i, point in enumerate(content, start=1):
-        steps.append(f"**{i}. {point}**")
-    return "\n\n".join(steps)
+        steps.append(f"{i}. {point}")
+    return "\n".join(steps)
 
 # Recursive function to find the most relevant information
 def find_relevant_information(query, base_url, max_depth=3, current_depth=0):
     if current_depth > max_depth:
         return None
 
-    # Step 1: Scrape links with query relevance
-    links = scrape_links(base_url, query)
+    # Step 1: Scrape links and text with query relevance
+    links = scrape_links_and_text(base_url, query)
     if not links:
         return None
 
