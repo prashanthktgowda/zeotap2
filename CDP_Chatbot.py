@@ -24,7 +24,10 @@ def preprocess_text(text):
 # Scrape all links from a documentation page
 def scrape_links(base_url, query):
     try:
-        response = requests.get(base_url, timeout=10)
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        }
+        response = requests.get(base_url, headers=headers, timeout=10)
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'html.parser')
 
@@ -46,16 +49,19 @@ def scrape_links(base_url, query):
 # Scrape content from a specific URL
 def scrape_content(url, query):
     try:
-        response = requests.get(url, timeout=10)
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        }
+        response = requests.get(url, headers=headers, timeout=10)
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'html.parser')
 
-        # Collect potential content (code, scripts, paragraphs)
+        # Collect potential content (paragraphs, headers, lists)
         content = []
-        for tag in ['code', 'pre', 'script', 'p', 'li', 'h2', 'h3']:
+        for tag in ['p', 'h1', 'h2', 'h3', 'li']:
             for element in soup.find_all(tag):
                 text = element.get_text().strip()
-                if text:
+                if text and len(text.split()) > 5:  # Filter out short or irrelevant text
                     content.append(text)
 
         # Match the content to the query
@@ -63,7 +69,7 @@ def scrape_content(url, query):
         content_embeddings = model.encode(content, convert_to_tensor=True)
         scores = util.pytorch_cos_sim(query_embedding, content_embeddings)[0]
         top_indices = torch.topk(scores, k=min(10, len(content))).indices.tolist()
-        relevant_content = [content[idx] for idx in top_indices if len(content[idx]) > 20]
+        relevant_content = [content[idx] for idx in top_indices]
 
         # Remove duplicate points and sequence results
         return sorted(set(relevant_content), key=relevant_content.index)
@@ -71,15 +77,15 @@ def scrape_content(url, query):
         st.warning(f"Error scraping content from {url}: {e}")
         return []
 
-# Format answers with step-by-step instructions
+# Format answers with detailed information
 def format_answer(content):
     if not content:
         return "- No relevant content found for your query."
 
     steps = []
     for i, point in enumerate(content, start=1):
-        steps.append(f"{i}. {point}")
-    return "\n".join(steps)
+        steps.append(f"**{i}. {point}**")
+    return "\n\n".join(steps)
 
 # Recursive function to find the most relevant information
 def find_relevant_information(query, base_url, max_depth=3, current_depth=0):
@@ -104,7 +110,7 @@ def find_relevant_information(query, base_url, max_depth=3, current_depth=0):
 
     if best_link:
         section_name, section_url = best_link
-        st.info(f"Exploring: {section_name} ({section_url})")
+        st.info(f"Exploring: **{section_name}** ({section_url})")
 
         # Step 3: Fetch content if it's a final article link
         content = scrape_content(section_url, query)
@@ -135,12 +141,12 @@ def compare_cdps(query, cdp1, cdp2):
     info_cdp2 = fetch_relevant_information(query, cdp2)
 
     comparison = [
-        f"### Comparison: {cdp1} vs. {cdp2}",
+        f"### Comparison: **{cdp1}** vs. **{cdp2}**",
         f"**{cdp1}:**\n{info_cdp1}",
         "",
         f"**{cdp2}:**\n{info_cdp2}",
     ]
-    return "\n".join(comparison)
+    return "\n\n".join(comparison)
 
 # Streamlit Chatbot UI
 st.set_page_config(page_title="CDP Support Chatbot", page_icon="💬", layout="wide")
