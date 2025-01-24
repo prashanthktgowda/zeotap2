@@ -11,7 +11,7 @@ model = SentenceTransformer('all-MiniLM-L6-v2')
 
 # Documentation links for each CDP
 docs_links = {
-    "Segment": "https://segment.com/docs",
+    "Segment": "https://segment.com/docs/getting-started/implementation-guide/",
     "mParticle": "https://docs.mparticle.com",
     "Lytics": "https://docs.lytics.com",
     "Zeotap": "https://docs.zeotap.com/home/en-us/"
